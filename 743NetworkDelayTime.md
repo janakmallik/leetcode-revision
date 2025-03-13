@@ -43,36 +43,39 @@ If `times = [[2,1,1], [2,3,1], [3,4,1]]`, the adjacency list will be:
 ## Implementation
 ```python
 from typing import List
-from heapq import heappop, heappush
-from collections import defaultdict
+import heapq  # Importing heapq for priority queue (min-heap)
 
 class Solution:
     def networkDelayTime(self, times: List[List[int]], n: int, k: int) -> int:
-        # Step 1: Build the adjacency list
-        graph = defaultdict(list)
-        for u, v, w in times:
-            graph[u].append((v, w))
-
-        # Step 2: Use Dijkstra’s Algorithm
-        heap = [(0, k)]  # (travel time, node)
-        shortest_time = {}
+        # Step 1: Create an adjacency list to store the graph
+        graph = {}  # Dictionary to store edges in {node: [(neighbor, time), ...]} format
+        for u, v, w in times:  # Iterate through all edges
+            if u not in graph:
+                graph[u] = []  # Initialize the list if node is not in the dictionary
+            graph[u].append((v, w))  # Add the directed edge (destination, weight)
         
-        while heap:
-            time, node = heappop(heap)  # Get node with the shortest known time
-            
-            if node in shortest_time:
-                continue  # If we already processed this node, skip it
-            
-            shortest_time[node] = time  # Record shortest time to reach this node
-            
-            for neighbor, weight in graph[node]:
-                if neighbor not in shortest_time:
-                    heappush(heap, (time + weight, neighbor))  # Push next node
+        # Step 2: Use a priority queue (min-heap) to process nodes with the shortest time first
+        pq = [(0, k)]  # Heap stores tuples (time to reach, node), starting with (0, k)
+        dist = {}  # Dictionary to store the shortest time to each node
         
-        # Step 3: Check if all nodes are reached
-        if len(shortest_time) == n:
-            return max(shortest_time.values())  # Max time among all reachable nodes
-        return -1  # If some nodes are not reached
+        # Step 3: Implement Dijkstra's Algorithm
+        while pq:  # Continue while the heap is not empty
+            time, node = heapq.heappop(pq)  # Get the node with the shortest time
+            
+            if node in dist:
+                continue  # If the node is already visited, skip it (shortest time already found)
+            
+            dist[node] = time  # Store the shortest time to reach this node
+            
+            if node in graph:  # Process the neighbors of the current node
+                for neighbor, weight in graph[node]:  # Iterate through connected nodes
+                    if neighbor not in dist:  # If neighbor is not visited
+                        heapq.heappush(pq, (time + weight, neighbor))  # Push updated time into heap
+        
+        # Step 4: Check if all nodes are reachable
+        if len(dist) == n:  # If we reached all nodes, return the max time taken
+            return max(dist.values())  # The maximum time among all shortest paths
+        return -1  # If some nodes are unreachable, return -1
 ```
 
 ---
